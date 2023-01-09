@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <%- include('./partials/header'); %>
+</head>
+<%- include('./partials/loader'); %>
+<body>
+<%- include('./partials/navbar'); %>
+
+<main class="container-fluid" style="margin-top: 4rem;">
+    <div class="row justify-content-center" id="queryTextArea">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+            <div class="card mt-2">
+                <div class="card-header bg-dark text-white"><h4>Apex Logs</h4></div>
+                <div class="card-body">
+                    <form action="/search-logs" method="get" id="searchForm">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12 col-lg-5 my-2">
+                            <input id="q" name="q" type="text" class="form-control" placeholder="Search Term" value="<%= q %>">
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-5 my-2">
+                            <input id="name" name="name" type="text" class="form-control" placeholder="someuser@salesforce.com" value="<%= name %>">
+                        </div>
+                        <div class="col-sm-12 col-md-4 col-lg-2 my-2">
+                            <button class="btn btn-dark w-100" type="button" onclick="searchLogs()">Search</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+            <% if(logs.length > 0){ %>
+            <div class="card mt-3 mb-5">
+                <div class="card-header bg-dark text-white"><h4>Search Results</h4></div>
+                <div class="card-body">
+                    <div class="accordion" id="accordionLog">
+                        <% for(let i = 0; i < logs.length; i++) { %>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne<%= i %>">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne<%= i %>" aria-expanded="true" aria-controls="collapseOne<%= i %>">
+                                        <ul>
+                                            <li><strong>File Name </strong><%= logs[i].name %></li>
+                                            <li><strong>File Created </strong> (<%= logs[i].time %>)</li>
+                                        </ul>
+                                    </button>
+                                </h2>
+                                <div id="collapseOne<%= i %>" class="accordion-collapse collapse <% if(i === 0){ %> show <% } %>" aria-labelledby="headingOne<%= i %>" data-bs-parent="#accordionLog">
+                                    <div class="accordion-body">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Name</th>
+                                                        <th>Size</th>
+                                                        <th>Time</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr>
+                                                        <td><%= logs[i].name %></td>
+                                                        <td><%= logs[i].size %></td>
+                                                        <td><%= logs[i].time %></td>
+                                                        <td>
+                                                            <a target="_blank" href="/download-log?name=<%= logs[i].user %>&file=<%= logs[i].name %>" class="btn btn-sm btn-success">Download</a>
+                                                            <a data-action="delete" data-name="<%= logs[i].name %>" href="#" class="btn btn-sm btn-danger actionBtn">Delete</a>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-12 mt-2">
+                                                <pre><code class="language-log"><%= logs[i].content %></code></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+            <% } if(logs.length === 0 && q && name && dir){ %>
+                <div class="card mt-4">
+                    <div class="card-header bg-dark text-white"><h4>Search Results</h4></div>
+                    <div class="card-body">
+                        <div class="row justify-content-center">
+                            <div class="col-sm-12 col-md-12 col-lg-12 text-center">
+                                <strong class="text-danger">No Records Found</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</main>
+<%- include('./partials/footer'); %>
+<script type="text/javascript">
+    function searchLogs(){
+        let term = $('#q').val();
+        let name = $('#name').val();
+        if (term.length <= 0 || name.length <= 0) {
+            return Swal.fire(
+                'Oops!',
+                'Please fill all fields',
+                'info'
+            );
+        }
+        $('#searchForm').submit();
+    }
+
+    $(document).ready(function(){
+        <% if(q){ %>
+            let instance = new Mark(document.querySelector("#accordionLog"));
+            instance.mark('<%= q %>');
+        <% } %>
+        <% if(q && name && !dir){ %>
+        Swal.fire(
+            'Oops!',
+            'Directory not found.',
+            'error'
+        );
+        <% } %>
+        let currentUrl = window.location.href;
+        $('.actionBtn').each((i,e) => {
+            let name = $(e).attr('data-name');
+            let action = $(e).attr('data-action');
+            let href = '';
+            if(action === 'download'){
+                href = currentUrl + '&action=download&file=' + name;
+            }else{
+                href = currentUrl + '&action=delete&file=' + name;
+            }
+            $(e).attr('href',href);
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <%- include('./partials/header'); %>
+</head>
+<%- include('./partials/loader'); %>
+<body>
+<%- include('./partials/navbar'); %>
+
+<% if(authorized){ %>
+<main class="container-fluid" style="margin-top: 5rem;">
+    <div class="row justify-content-center" id="queryTextArea">
+        <div class="col-sm-12 col-md-12 col-lg-5">
+            <div class="card">
+                <div class="card-header bg-dark text-white"><h4>Fetch Logs</h4></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="user" class="form-label">User Email</label>
+                        <input type="email" class="form-control" id="user">
+                    </div>
+                    <div class="mb-3">
+                        <label for="numberOfLogs" class="form-label">Number of Logs</label>
+                        <input type="number" class="form-control" id="numberOfLogs">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button onclick="makeLogCall()" class="btn btn-dark float-end">Fetch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<% } else { %>
+<main class="container-fluid" style="margin-top: 5rem;">
+    <div class="row justify-content-center">
+        <div class="col-sm-12 col-md-12 col-lg-7">
+            <div class="card">
+                <div class="card-header bg-dark text-white"><h4>Authorize Salesforce</h4></div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <p>During the authorization process. Please consider the following points:</p>
+                            <ul class="list-unstyled">
+                                <li>Do Not close this current window.</li>
+                                <li>Do not reload/refresh this window</li>
+                                <li>Wait till you get the <strong class="text-success">success</strong> or <strong class="text-danger">error</strong> message</li>
+                            </ul>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="toc" onclick="acceptTerms(this)">
+                                <label class="form-check-label" for="toc">
+                                    I have read all the above points and agree to follow
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="authorizationBtn" disabled class="btn btn-danger float-end" onclick="authorizeSalesForce()" type="button">Authorize SalesForce</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<% } %>
+<%- include('./partials/footer'); %>
+<script type="text/javascript">
+    function makeLogCall() {
+        let number = $('#numberOfLogs').val();
+        let user = $('#user').val();
+        if (number.length <= 0 || user.length <= 0) {
+            return Swal.fire(
+                'Oops!',
+                'Please fill all fields',
+                'info'
+            )
+        }
+        postRequest('/get-logs',{number: number,user:user},function(e){
+            if(e.hasOwnProperty('success') && e.success){
+                return Swal.fire(e.response);
+            }
+        });
+    }
+
+    function acceptTerms(element){
+        let isChecked = $(element).is(':checked');
+        if(isChecked){
+            $('#authorizationBtn').attr('disabled',false);
+        }else{
+            $('#authorizationBtn').attr('disabled',true);
+        }
+    }
+
+    function authorizeSalesForce(){
+        postRequest('/authorization',{},function(data){
+            if(data.hasOwnProperty('success') && data.success){
+                Swal.fire({
+                    title: 'Authorization Successful.',
+                    html:'<p>' + data.response + '</p>',
+                    showDenyButton: false,
+                    showCancelButton: false,
+                    confirmButtonText: 'Fetch Logs',
+                    denyButtonText: `Don't save`,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                        //window.location.href = window.location.origin + '/' + 'search-logs';
+                    } else if (result.isDenied) {
+                        Swal.fire('Canceled', '', 'info');
+                    }
+                });
+            }
+        })
+    }
+</script>
+</body>
+</html>

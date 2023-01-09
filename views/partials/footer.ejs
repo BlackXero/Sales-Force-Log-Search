@@ -1,0 +1,25 @@
+<script src="/bootstrap.bundle.min.js"></script>
+<script src="/sweetalert2.all.min.js"></script>
+<script src="/jquery-3.6.3.min.js"></script>
+<script src="/mark.min.js"></script>
+<script src="/prism.js"></script>
+<script>
+    function postRequest(url, data, callbackSuccess) {
+        $.ajax({
+            method: 'post',
+            url: url,
+            data: data,
+            success: callbackSuccess,
+            timeout:180000,
+            beforeSend: function () {
+                $('#loader-div').show();
+            },
+            complete: function () {
+                $('#loader-div').hide();
+            },
+            error: function (error) {
+                return Swal.fire(error);
+            }
+        });
+    }
+</script>

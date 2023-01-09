@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<%- include('./partials/header'); %>
+    <link rel="stylesheet" href="/jsuites.css" type="text/css" />
+    <link rel="stylesheet" href="/jexcel.css" type="text/css" />
+</head>
+<%- include('./partials/loader'); %>
+<body>
+<%- include('./partials/navbar'); %>
+
+<main class="container-fluid" style="margin-top: 5rem;">
+    <div class="row justify-content-center" id="queryTextArea">
+        <div class="col-sm-12 col-md-12 col-lg-7">
+            <div class="card">
+                <div class="card-header bg-dark text-white"><h4>Query SalesForce Data</h4></div>
+                <div class="card-body">
+                    <small class="text-danger">Please write a query and then click the Run command.<br><span class="badge rounded-pill text-bg-dark">Select Id,Name From Account</span></small>
+                    <label for="queryTextBox"></label><textarea id="queryTextBox" class="form-control mt-2" rows="6" style="resize:none;">Select Id,Name From Account</textarea>
+                </div>
+                <div class="card-footer">
+                    <button onclick="makeQueryCall()" class="btn btn-dark float-end">Execute Query</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="spreadSheetDiv" style="display: none">
+        <div class="col-12">
+            <h2>Records</h2>
+        </div>
+        <div class="col-12">
+            <button class="btn btn-primary" onclick="downloadRecords()" type="button">Download</button>
+            <button class="btn btn-primary" onclick="goBack()" type="button">Back</button>
+        </div>
+        <div class="col-12">
+            <div id="spreadsheet"></div>
+        </div>
+    </div>
+</main>
+<%- include('./partials/footer'); %>
+<script src="/jexcel.js"></script>
+<script src="/jsuites.js"></script>
+<script type="text/javascript">
+    let sheetObj = null;
+    $(document).ready(function(){
+        $('#spreadSheetDiv').hide();
+    });
+    function goBack(){
+        $('#spreadSheetDiv').hide();
+        $('#queryTextArea').show();
+    }
+    function downloadRecords(){
+        sheetObj.download();
+    }
+    function makeQueryCall(element) {
+        let query = $('#queryTextBox').val();
+        if (query.length <= 0) {
+            return Swal.fire(
+                'Oops!',
+                'Please write some query first',
+                'info'
+            )
+        }
+        postRequest('/process',{data: query},function(data){
+            if(data.hasOwnProperty('done') && data.done === false){
+                return Swal.fire(
+                    data.message.errorCode,
+                    data.message.name,
+                    'warning'
+                )
+            }
+            let records = data.data;
+            $('#spreadSheetDiv').show();
+            $('#queryTextArea').hide();
+            document.getElementById('spreadsheet').innerHTML = "";
+            sheetObj = jspreadsheet(document.getElementById('spreadsheet'),records);
+        });
+    }
+    <% if(showPopup){ %>
+    $(document).ready(function(){
+        Swal.fire({
+            icon: 'info',
+            title: 'Terminated',
+            text: 'SFDX Connection terminated'
+        });
+    });
+    <% } %>
+</script>
+</body>
+</html>
