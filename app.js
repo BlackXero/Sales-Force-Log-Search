@@ -23,6 +23,7 @@ app.listen(port, () => {
 global.authorized = false;
 
 app.get('/', (req, res) => {
+
     let showPopup = false;
     if(req.query.terminate){
         showPopup = true;
