@@ -113,7 +113,10 @@
     $(document).ready(function(){
         <% if(q){ %>
             let instance = new Mark(document.querySelector("#accordionLog"));
-            instance.mark('<%= q %>');
+            instance.mark('<%= q %>',{
+                accuracy:"complementary",
+                acrossElements:true
+            });
         <% } %>
         <% if(q && name && !dir){ %>
         Swal.fire(
